@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: dragonscale
+      POSTGRES_USER: dragon
+      POSTGRES_PASSWORD: securepass123
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  agent-zero:
+    image: agent0ai/agent-zero:latest
+    ports:
+      - "8080:80"
+    volumes:
+      - a0_usr:/a0/usr
+    environment:
+      - LLM_PROVIDER=openai
+    depends_on:
+      - postgres
+
+  dragonscale-api:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=postgresql://dragon:securepass123@postgres:5432/dragonscale
+      - AGENT_ZERO_URL=http://agent-zero:80
+    depends_on:
+      - postgres
+      - agent-zero
+
+volumes:
+  postgres_data:
+  a0_usr:
